@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  CASHIER
+}
+
+model User {
+  id         Int          @id @default(autoincrement())
+  email      String       @unique @db.VarChar(100)
+  name       String       @db.VarChar(100)
+  password   String       @db.VarChar(100)
+  UserStores UserStores[]
+  Cart       Cart[]
+  Order      Order[]
+  Store      Store[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model UserStores {
+  id      Int   @id @default(autoincrement())
+  userId  Int
+  user    User  @relation(fields: [userId], references: [id])
+  storeId Int
+  store   Store @relation(fields: [storeId], references: [id])
+  role    Role  @default(CASHIER)
+
+  @@index([userId, storeId])
+}
+
+model Store {
+  id         Int          @id @default(autoincrement())
+  name       String       @db.VarChar(32)
+  isDeleted  Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  UserStores UserStores[]
+  Product    Product[]
+  Cart       Cart[]
+  Order      Order[]
+  User       User?        @relation(fields: [userId], references: [id])
+  userId     Int?
+
+  @@map("stores")
+}
+
+model Category {
+  id        Int     @id @default(autoincrement())
+  storeId   Int
+  name      String  @db.VarChar(64)
+  isDeleted Boolean @default(false)
+
+  @@index([storeId])
+  @@map("categories")
+}
+
+model Product {
+  id        Int         @id @default(autoincrement())
+  storeId   Int
+  store     Store       @relation(fields: [storeId], references: [id])
+  name      String      @db.VarChar(64)
+  sku       String      @db.VarChar(128)
+  price     Decimal     @default(0.00)
+  stock     Int
+  isDeleted Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  OrderItems OrderItems[]
+  Cart      Cart[]
+
+  @@index([storeId, name, sku])
+  @@map("products")
+}
+
+model Cart {
+  id        Int     @id @default(autoincrement())
+  storeId   Int
+  store     Store   @relation(fields: [storeId], references: [id])
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+
+  @@index([storeId, userId, productId])
+  @@map("carts")
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  storeId   Int
+  store     Store       @relation(fields: [storeId], references: [id])
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id])
+  total     Decimal     @default(0.00)
+  createdAt DateTime    @default(now())
+  OrderItems OrderItems[]
+
+  @@index([storeId])
+  @@map("orders")
+}
+
+model OrderItems {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  order      Order    @relation(fields: [orderId], references: [id])
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id])
+  name       String
+  sku       String
+  price      Decimal  @default(0.00)
+  quantity   Int
+  totalPrice Decimal  @default(0.00)
+  createdAt  DateTime @default(now())
+
+  @@index([orderId, productId])
+  @@map("order_items")
+}
