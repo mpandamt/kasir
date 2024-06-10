@@ -11,12 +11,14 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleOAuthGuard } from './utils/google-oauth.guard';
-import { RegisterUserRequest, UserResponse } from '../model/user.model';
+import { UserResponse } from '../model/user.model';
 import { WebResponse } from '../model/web.model';
 import { LocalAuthGuard } from './utils/local.guard';
 import { Roles } from '../common/roles.decorator';
 import { Request } from 'express';
 import { ApiBody, ApiCookieAuth, ApiTags } from '@nestjs/swagger';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -39,7 +41,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   @ApiBody({
-    type: RegisterUserRequest,
+    type: LoginDto,
   })
   login() {
     return {
@@ -49,9 +51,9 @@ export class AuthController {
 
   @Post('register')
   async register(
-    @Body() request: RegisterUserRequest,
+    @Body() registerDto: RegisterDto,
   ): Promise<WebResponse<UserResponse>> {
-    const data = await this.authService.register(request);
+    const data = await this.authService.register(registerDto);
     return {
       data,
     };
@@ -61,8 +63,11 @@ export class AuthController {
   @Roles()
   @Delete('logout')
   async logout(@Req() req: Request) {
-    const sessionID = req.sessionID;
-    await this.authService.logout(sessionID);
+    req.logout((error) => {
+      if (error) {
+        throw error;
+      }
+    });
     return {
       message: 'logged out',
     };

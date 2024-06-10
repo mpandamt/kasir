@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { Injectable } from '@nestjs/common';
 import { PassportSerializer } from '@nestjs/passport';
-import { PrismaService } from '../common/prisma.service';
+import { PrismaService } from '../../common/prisma.service';
 
 class UserPayload {
   id: number;
@@ -15,12 +15,10 @@ export class SessionSerializer extends PassportSerializer {
   }
 
   serializeUser(user: UserPayload, done: Function) {
-    console.log('Serializer User');
     done(null, user);
   }
 
   async deserializeUser(payload: UserPayload, done: Function) {
-    console.log('Deserialize User');
     const user = await this.prismaService.user.findUnique({
       where: {
         id: payload.id,
