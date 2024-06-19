@@ -22,13 +22,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   ) {
     const { emails, displayName } = profile;
     const data = {
-      username: emails[0].value,
       email: emails[0].value,
       password: '',
       name: displayName,
     };
     const user = await this.authService.googleLogin(data);
     done(null, user);
-    // return data;
   }
 }

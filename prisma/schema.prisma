@@ -70,18 +70,18 @@ model Category {
 }
 
 model Product {
-  id        Int         @id @default(autoincrement())
-  storeId   Int
-  store     Store       @relation(fields: [storeId], references: [id])
-  name      String      @db.VarChar(64)
-  sku       String      @db.VarChar(128)
-  price     Decimal     @default(0.00)
-  stock     Int
-  isDeleted Boolean     @default(false)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id         Int          @id @default(autoincrement())
+  storeId    Int
+  store      Store        @relation(fields: [storeId], references: [id])
+  name       String       @db.VarChar(64)
+  sku        String       @db.VarChar(128)
+  price      Decimal      @default(0.00)
+  stock      Int
+  isDeleted  Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
   OrderItems OrderItems[]
-  Cart      Cart[]
+  Cart       Cart[]
 
   @@index([storeId, name, sku])
   @@map("products")
@@ -102,13 +102,13 @@ model Cart {
 }
 
 model Order {
-  id        Int         @id @default(autoincrement())
-  storeId   Int
-  store     Store       @relation(fields: [storeId], references: [id])
-  userId    Int
-  user      User        @relation(fields: [userId], references: [id])
-  total     Decimal     @default(0.00)
-  createdAt DateTime    @default(now())
+  id         Int          @id @default(autoincrement())
+  storeId    Int
+  store      Store        @relation(fields: [storeId], references: [id])
+  userId     Int
+  user       User         @relation(fields: [userId], references: [id])
+  total      Decimal      @default(0.00)
+  createdAt  DateTime     @default(now())
   OrderItems OrderItems[]
 
   @@index([storeId])
@@ -116,17 +116,16 @@ model Order {
 }
 
 model OrderItems {
-  id         Int      @id @default(autoincrement())
-  orderId    Int
-  order      Order    @relation(fields: [orderId], references: [id])
-  productId  Int
-  product    Product  @relation(fields: [productId], references: [id])
-  name       String
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  name      String
   sku       String
-  price      Decimal  @default(0.00)
-  quantity   Int
-  totalPrice Decimal  @default(0.00)
-  createdAt  DateTime @default(now())
+  price     Decimal  @default(0.00)
+  quantity  Int
+  createdAt DateTime @default(now())
 
   @@index([orderId, productId])
   @@map("order_items")

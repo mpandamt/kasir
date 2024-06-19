@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma.service';
 import { ValidationService } from '../common/validation.service';
 import { CartResponse } from '../model/cart.model';
@@ -16,15 +16,19 @@ export class CartService {
     private readonly validationService: ValidationService,
   ) {}
 
-  async checkProductMustExists(productId: number): Promise<Product> {
+  async checkProductMustExists(
+    productId: number,
+    storeId: number,
+  ): Promise<Product> {
     const product = await this.prismaService.product.findFirst({
       where: {
         id: productId,
+        storeId: storeId,
         isDeleted: false,
       },
     });
     if (!product) {
-      throw new HttpException('Product not found', 404);
+      throw new NotFoundException('Product not found');
     }
     return product;
   }
@@ -38,7 +42,10 @@ export class CartService {
       CartValidation.CREATE,
       createCartDto,
     );
-    const product = await this.checkProductMustExists(request.productId);
+    const product = await this.checkProductMustExists(
+      request.productId,
+      storeId,
+    );
 
     let cart = await this.prismaService.cart.findFirst({
       where: {
@@ -53,7 +60,7 @@ export class CartService {
     if (cart) {
       const quantity = request.quantity + cart.quantity;
       if (product.stock < quantity) {
-        throw new HttpException('Product stock is not enough', 404);
+        throw new HttpException('Product stock is not enough', 400);
       }
 
       cart = await this.prismaService.cart.update({
@@ -68,7 +75,7 @@ export class CartService {
     } else {
       const quantity = request.quantity;
       if (product.stock < quantity) {
-        throw new HttpException('Product stock is not enough', 404);
+        throw new HttpException('Product stock is not enough', 400);
       }
 
       cart = await this.prismaService.cart.create({
@@ -90,7 +97,7 @@ export class CartService {
       sku: cart.product.sku,
       quantity: cart.quantity,
       price: cart.product.price,
-      totalPrice: Number(cart.product.price) * cart.quantity,
+      totalPrice: cart.product.price.mul(cart.quantity),
     };
   }
 
@@ -119,7 +126,7 @@ export class CartService {
         sku: cart.product.sku,
         quantity: cart.quantity,
         price: cart.product.price,
-        totalPrice: Number(cart.product.price) * cart.quantity,
+        totalPrice: cart.product.price.mul(cart.quantity),
       })),
     };
   }
@@ -134,6 +141,23 @@ export class CartService {
       CartValidation.UPDATE,
       updateCartDto,
     );
+
+    const cartItem = await this.prismaService.cart.findFirst({
+      where: {
+        id,
+        storeId,
+        userId: user.id,
+      },
+      include: {
+        product: true,
+      },
+    });
+    if (!cartItem) {
+      throw new HttpException('Cart not found', 404);
+    }
+    if (cartItem.product.stock < request.quantity) {
+      throw new HttpException('Product stock is not enough', 400);
+    }
 
     const cart = await this.prismaService.cart.update({
       where: {
@@ -156,7 +180,7 @@ export class CartService {
       sku: cart.product.sku,
       quantity: cart.quantity,
       price: cart.product.price,
-      totalPrice: Number(cart.product.price) * cart.quantity,
+      totalPrice: cart.product.price.mul(cart.quantity),
     };
   }
 
@@ -178,7 +202,7 @@ export class CartService {
       sku: cart.product.sku,
       quantity: cart.quantity,
       price: cart.product.price,
-      totalPrice: Number(cart.product.price) * cart.quantity,
+      totalPrice: cart.product.price.mul(cart.quantity),
     };
   }
 }

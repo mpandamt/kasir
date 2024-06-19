@@ -7,5 +7,5 @@ export class CartResponse {
   sku: string;
   quantity: number;
   price: Decimal;
-  totalPrice: number;
+  totalPrice: Decimal;
 }

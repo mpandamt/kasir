@@ -40,26 +40,40 @@ export class CartController {
 
   @ApiListResponse(CartResponse)
   @Get()
-  findAll(@Auth() user: User, @Param('storeId', ParseIntPipe) storeId: number) {
+  findAll(
+    @Auth() user: User,
+    @Param('storeId', ParseIntPipe) storeId: number,
+  ): Promise<WebResponse<CartResponse[]>> {
     return this.cartService.findAll(storeId, user);
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Auth() user: User,
     @Param('storeId', ParseIntPipe) storeId: number,
     @Body() updateCartDto: UpdateCartDto,
-  ) {
-    return this.cartService.update(id, storeId, user, updateCartDto);
+  ): Promise<WebResponse<CartResponse>> {
+    const cart = await this.cartService.update(
+      id,
+      storeId,
+      user,
+      updateCartDto,
+    );
+    return {
+      data: cart,
+    };
   }
 
   @Delete(':id')
-  remove(
+  async remove(
     @Param('id') id: number,
     @Auth() user: User,
     @Param('storeId', ParseIntPipe) storeId: number,
-  ) {
-    return this.cartService.remove(id, storeId, user);
+  ): Promise<WebResponse<CartResponse>> {
+    const cart = await this.cartService.remove(id, storeId, user);
+    return {
+      data: cart,
+    };
   }
 }
