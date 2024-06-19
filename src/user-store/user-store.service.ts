@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, Injectable } from '@nestjs/common';
 import { Role, User, UserStores } from '@prisma/client';
 import { PrismaService } from '../common/prisma.service';
 import { ValidationService } from '../common/validation.service';
@@ -97,7 +97,7 @@ export class UserStoreService {
       findAllStoreRequest,
     );
 
-    const filters = [];
+    const filters: any = [];
 
     filters.push({
       storeId,
@@ -242,7 +242,7 @@ export class UserStoreService {
     };
   }
 
-  async getRole(userId: number, storeId: number): Promise<Role | null> {
+  async getRole(userId: number, storeId: number): Promise<Role> {
     const result = await this.prismaService.userStores.findFirst({
       where: {
         userId,
@@ -255,6 +255,11 @@ export class UserStoreService {
         role: true,
       },
     });
-    return result?.role || null;
+    if (!result) {
+      throw new ForbiddenException(
+        `User does not have role in storeId: ${storeId}`,
+      );
+    }
+    return result.role;
   }
 }

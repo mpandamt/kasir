@@ -92,6 +92,6 @@ export class AuthService {
       const { password, ...restUser } = user;
       return restUser;
     }
-    return null;
+    throw new HttpException('Failed to create user', 500);
   }
 }
